@@ -20,6 +20,7 @@ from pipecat.services.cartesia import CartesiaTTSService
 from pipecat.transports.webrtc import create_webrtc_transport
 
 async def main():
+    print('--------INSIDE main()')
     # 1. Local WebRTC transport
     transport = await create_webrtc_transport()
 
