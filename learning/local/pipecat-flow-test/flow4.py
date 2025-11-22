@@ -118,7 +118,7 @@ def create_generalbot()->NodeConfig:
         "task_messages": [
             {
                 "role": "system",
-                "content": "Say Hello ans start the conversation",
+                "content": "Say Hello ans start the conversation in kindful way and in short dont bore them understand it from previous conversation, keep your responses consice when needed and descriptive when needed",
             }
         ],
         "functions": [transfer_control_tool]
@@ -139,7 +139,7 @@ def create_data_collector()->NodeConfig:
         "task_messages": [
             {
                 "role": "system",
-                "content": "Introduce yourself and tell what you are supposed to do in kindful way",
+                "content": "Introduce yourself and tell what you are supposed to do in kindful way and in short dont bore them understand it from previous conversation",
             }
         ],
         "functions": [transfer_control_tool]
