@@ -44,8 +44,8 @@ from pipecat_flows import (
 load_dotenv(override=True)
 
 voice_ids={
-    "general_bot":"d01294a0-1ddd-4b92-80c9-6dbb7d40e564",
-    "data_collector":""
+    "general_bot":"6ccbfb76-1fc6-48f7-b71d-91ac6298247b",
+    "data_collector":"6a8a40f7-9284-4f1d-b839-16e205174254"
 }
 
 transport_params = {
@@ -78,9 +78,20 @@ async def transfer_control(args:FlowArgs,flow_manager:FlowManager)->tuple[str,No
     
     next_node = args['next_node']  
     
+  
+    #await flow_manager.push_frames(TTSSpeakFrame("Inside record_last_name_function  ,your lat name is being recorded brother"))
+    await flow_manager.task.queue_frame(TTSSpeakFrame("Inside record_last_name_function, your last name is being recorded brother"))
+
+    
     if next_node == 'data_collector':
+        await flow_manager.task.queue_frame(
+            TTSUpdateSettingsFrame({"voice": voice_ids['data_collector']})
+        )
         return "done",create_data_collector()
     elif next_node =='general_bot':
+        await flow_manager.task.queue_frame(
+            TTSUpdateSettingsFrame({"voice": voice_ids['general_bot']})
+        )
         return "done",create_generalbot()
     else:
         return "invalid next_node name",None
