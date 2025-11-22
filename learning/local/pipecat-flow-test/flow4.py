@@ -43,6 +43,11 @@ from pipecat_flows import (
 
 load_dotenv(override=True)
 
+voice_ids={
+    "general_bot":"d01294a0-1ddd-4b92-80c9-6dbb7d40e564",
+    "data_collector":""
+}
+
 transport_params = {
     "daily": lambda: DailyParams(
         audio_in_enabled=True,
@@ -63,133 +68,69 @@ transport_params = {
     ),
 }
 
-def create_second_node()->NodeConfig:
-    """Create second node"""
 
-    record_last_name_tool=FlowsFunctionSchema(
-        name="record_last_name_tool",
-        description="Records last name of the user",
-        required=['last_name'],
-        handler=record_last_name_function,
-        properties={'last_name':{'type':'string'}}
-    )
+def transfer_control(next_node:str)->tuple[str,NodeConfig]:
+    """Transfer control to the next bot in the voice agentic meeting application
 
-    return {
-        'name':'second_node',
-        'role_messages':[
-            {
-                'role':'system',
-                'content':'You are an onboarding assistant John,Your main job is to collect last_name of the user'
-            }
-        ],
-        'task_messages':[
-            {
-                'role':'system',
-                'content':'Say good afternoon to user and ask for their last name'
-            }
-        ],
-        'functions':[record_last_name_tool]
-    }
-
-
-# Flow nodes
-def create_initial_node() -> NodeConfig:
-    """Create the initial node of the flow.
-
-    Define the bot's role and task for the node as well as the function for it to call.
-    The function call includes a handler which provides the function call result to
-    Pipecat and then transitions to the next node.
+    Args:
+        next_node (str): name of the next node (ex:data_collector,general_bot)
     """
-    record_favorite_color_func = FlowsFunctionSchema(
-        name="record_favorite_color_func",
-        description="Record the color the user said is their favorite.",
-        required=["color"],
-        handler=record_favorite_color_and_set_next_node,
-        properties={"color": {"type": "string"}},
-    )
+    
+    if next_node == 'data_collector':
+        return "done",create_data_collector()
+    elif next_node =='general_bot':
+        return "done",create_generalbot()
+    else:
+        return "invalid next_node name",None
 
-    record_first_name_tool = FlowsFunctionSchema(
-        name='record_first_name_func',
-        description='Records the first name of the user',
-        required=['first_name'],
-        handler=record_first_name_func,
-        properties={'first_name':{'type':'string'}}
-    )
+transfer_control_tool=FlowsFunctionSchema(
+    name="transfer_control",
+    description="Transfer control to the next AI Voice bot",
+    required=['next_node'],
+    handler=transfer_control,
+    properties={'next_node':{'type':'string'}}
+)
 
+def create_generalbot()->NodeConfig:
+    from prompts.flows_prompts import general_bot_meeting_suite_prompt
+    
     return {
         "name": "initial",
         "role_messages": [
             {
                 "role": "system",
-                "content": "You Neo, your job is to collect favourity color of the user and store it.You can speak in any language user speaks in , YOu have that capability as well as freedom",
+                "content": general_bot_meeting_suite_prompt,
             }
         ],
         "task_messages": [
             {
                 "role": "system",
-                "content": "Say 'Hello' and have good starter with out potential new customer",
+                "content": "Say Hello ans start the conversation",
             }
         ],
-        "functions": [record_favorite_color_func]
+        "functions": [transfer_control_tool]
     }
 
-async def record_last_name_function(args:FlowArgs,flow_manager:FlowManager)->tuple[str,NodeConfig]:
-    """
-        Records the last_name of the user
-    """
-    await flow_manager.task.queue_frame(
-        TTSUpdateSettingsFrame({"voice": "228fca29-3a0a-435c-8728-5cb483251068"})
-    )
-    #await flow_manager.push_frames(TTSSpeakFrame("Inside record_last_name_function  ,your lat name is being recorded brother"))
-    await flow_manager.task.queue_frame(TTSSpeakFrame("Inside record_last_name_function, your last name is being recorded brother"))
 
-    print(f'flow_manager : {flow_manager}')
-    print(f'Your last_name is : {args["last_name"]}')
-    return args['last_name'],None
-
-
-async def record_first_name_func(args:FlowArgs,flow_manager:FlowManager)-> tuple[str,NodeConfig]:
-    """
-        args:
-            first_name :(string) : first_name of the user
-            
-    """
-    print(f"Your first name is : {args}")
-    return "some_default_name",None
-
-async def record_favorite_color_and_set_next_node(
-    args: FlowArgs, flow_manager: FlowManager
-) -> tuple[str, NodeConfig]:
-    """Function handler that records the color then sets the next node.
-
-    Here "record" means print to the console, but any logic could go here;
-    Write to a database, make an API call, etc.
-    """
-    print(f"Your favorite color is: {args['color']}")
-    await flow_manager.task.queue_frame(TTSSpeakFrame("Inside record_favourite_color_function, your favourite color is being recorded brother"))
-#    return args["color"], create_end_node()
-#    return args["color"], None
-    return args['color'],create_second_node()
-
-
-
-def create_end_node() -> NodeConfig:
-    """End the conversation.
-
-    Flows transitions to this node when the user has answered the question.
-    It thanks the user and ends the conversation using the `end_conversation`
-    post-action.
-    """
-    return NodeConfig(
-        name="create_end_node",
-        task_messages=[
+def create_data_collector()->NodeConfig:
+    from prompts.flows_prompts import general_bot_meeting_suite_prompt
+    
+    return {
+        "name": "initial",
+        "role_messages": [
             {
                 "role": "system",
-                "content": "YOu are here to end the conversation in friendly reminding way",
+                "content": "You are a data collector bot,Your job is to collect data about user such as email,name and additional information based on the previous conversations we had with user, if user asks for any general information then use the function transfer_control('general_bot')",
             }
         ],
-        post_actions=[{"type": "end_conversation",'text':"Thank you so much brother"}],
-    )
+        "task_messages": [
+            {
+                "role": "system",
+                "content": "Introduce yourself and tell what you are supposed to do in kindful way",
+            }
+        ],
+        "functions": [transfer_control_tool]
+    }
 
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
@@ -231,7 +172,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     async def on_client_connected(transport, client):
         logger.info(f"Client connected")
         # Kick off the conversation.
-        await flow_manager.initialize(create_initial_node())
+        await flow_manager.initialize(create_generalbot())
 
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):
@@ -252,3 +193,135 @@ if __name__ == "__main__":
     from pipecat.runner.run import main
 
     main()
+
+
+
+
+# # Flow nodes
+# def create_initial_node() -> NodeConfig:
+#     """Create the initial node of the flow.
+
+#     Define the bot's role and task for the node as well as the function for it to call.
+#     The function call includes a handler which provides the function call result to
+#     Pipecat and then transitions to the next node.
+#     """
+#     record_favorite_color_func = FlowsFunctionSchema(
+#         name="record_favorite_color_func",
+#         description="Record the color the user said is their favorite.",
+#         required=["color"],
+#         handler=record_favorite_color_and_set_next_node,
+#         properties={"color": {"type": "string"}},
+#     )
+
+#     record_first_name_tool = FlowsFunctionSchema(
+#         name='record_first_name_func',
+#         description='Records the first name of the user',
+#         required=['first_name'],
+#         handler=record_first_name_func,
+#         properties={'first_name':{'type':'string'}}
+#     )
+
+#     return {
+#         "name": "initial",
+#         "role_messages": [
+#             {
+#                 "role": "system",
+#                 "content": "You Neo, your job is to collect favourity color of the user and store it.You can speak in any language user speaks in , YOu have that capability as well as freedom",
+#             }
+#         ],
+#         "task_messages": [
+#             {
+#                 "role": "system",
+#                 "content": "Say 'Hello' and have good starter with out potential new customer",
+#             }
+#         ],
+#         "functions": [record_favorite_color_func]
+#     }
+
+# async def record_last_name_function(args:FlowArgs,flow_manager:FlowManager)->tuple[str,NodeConfig]:
+#     """
+#         Records the last_name of the user
+#     """
+#     await flow_manager.task.queue_frame(
+#         TTSUpdateSettingsFrame({"voice": "228fca29-3a0a-435c-8728-5cb483251068"})
+#     )
+#     #await flow_manager.push_frames(TTSSpeakFrame("Inside record_last_name_function  ,your lat name is being recorded brother"))
+#     await flow_manager.task.queue_frame(TTSSpeakFrame("Inside record_last_name_function, your last name is being recorded brother"))
+
+#     print(f'flow_manager : {flow_manager}')
+#     print(f'Your last_name is : {args["last_name"]}')
+#     return args['last_name'],None
+
+
+# async def record_first_name_func(args:FlowArgs,flow_manager:FlowManager)-> tuple[str,NodeConfig]:
+#     """
+#         args:
+#             first_name :(string) : first_name of the user
+            
+#     """
+#     print(f"Your first name is : {args}")
+#     return "some_default_name",None
+
+# async def record_favorite_color_and_set_next_node(
+#     args: FlowArgs, flow_manager: FlowManager
+# ) -> tuple[str, NodeConfig]:
+#     """Function handler that records the color then sets the next node.
+
+#     Here "record" means print to the console, but any logic could go here;
+#     Write to a database, make an API call, etc.
+#     """
+#     print(f"Your favorite color is: {args['color']}")
+#     await flow_manager.task.queue_frame(TTSSpeakFrame("Inside record_favourite_color_function, your favourite color is being recorded brother"))
+# #    return args["color"], create_end_node()
+# #    return args["color"], None
+#     return args['color'],create_second_node()
+
+
+
+# def create_end_node() -> NodeConfig:
+#     """End the conversation.
+
+#     Flows transitions to this node when the user has answered the question.
+#     It thanks the user and ends the conversation using the `end_conversation`
+#     post-action.
+#     """
+#     return NodeConfig(
+#         name="create_end_node",
+#         task_messages=[
+#             {
+#                 "role": "system",
+#                 "content": "YOu are here to end the conversation in friendly reminding way",
+#             }
+#         ],
+#         post_actions=[{"type": "end_conversation",'text':"Thank you so much brother"}],
+#     )
+
+# def create_second_node()->NodeConfig:
+#     """Create second node"""
+
+#     record_last_name_tool=FlowsFunctionSchema(
+#         name="record_last_name_tool",
+#         description="Records last name of the user",
+#         required=['last_name'],
+#         handler=record_last_name_function,
+#         properties={'last_name':{'type':'string'}}
+#     )
+
+#     return {
+#         'name':'second_node',
+#         'role_messages':[
+#             {
+#                 'role':'system',
+#                 'content':'You are an onboarding assistant John,Your main job is to collect last_name of the user'
+#             }
+#         ],
+#         'task_messages':[
+#             {
+#                 'role':'system',
+#                 'content':'Say good afternoon to user and ask for their last name'
+#             }
+#         ],
+#         'functions':[record_last_name_tool]
+#     }
+
+
