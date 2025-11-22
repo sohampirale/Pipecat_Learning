@@ -8,7 +8,7 @@ import asyncio
 # Core imports (top-level after [all] extras)
 import pipecat.pipeline
 print(dir(pipecat.pipeline))
-from pipecat.pipeline import Pipeline
+from pipecat.pipeline.pipeline import Pipeline
 
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask
