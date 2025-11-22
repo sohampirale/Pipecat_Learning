@@ -69,7 +69,7 @@ transport_params = {
 }
 
 
-def transfer_control(args:FlowArgs,flow_manager:FlowManager)->tuple[str,NodeConfig]:
+async def transfer_control(args:FlowArgs,flow_manager:FlowManager)->tuple[str,NodeConfig]:
     """Transfer control to the next bot in the voice agentic meeting application
 
     Args:
