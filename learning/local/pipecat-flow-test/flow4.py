@@ -124,22 +124,53 @@ def create_generalbot()->NodeConfig:
         "functions": [transfer_control_tool]
     }
 
+def create_pre_onboarding_arranger()->NodeConfig:
+    """Creates NodeConfig for the pre_onboarding_collector"""
+    from prompts.flows_prompts import pre_onboarding_arranger_bot_suite_prompt
 
-def create_data_collector()->NodeConfig:
-    from prompts.flows_prompts import general_bot_meeting_suite_prompt
+    #TODO create one prompt for this node also similar to general_bot inside prompts.flows_prompts.py    
     
     return {
         "name": "initial",
         "role_messages": [
             {
                 "role": "system",
-                "content": "You are a data collector bot,Your job is to collect data about user such as email,name and additional information based on the previous conversations we had with user, if user asks for any general information then use the function transfer_control('general_bot')",
+                "content": pre_onboarding_arranger_bot_suite_prompt
             }
         ],
         "task_messages": [
             {
                 "role": "system",
                 "content": "Introduce yourself and tell what you are supposed to do in kindful way and in short dont bore them understand it from previous conversation",
+            }
+        ],
+        "functions": [transfer_control_tool]
+    }
+
+def create_data_collector()->NodeConfig:
+    from prompts.flows_prompts import data_collector_bot_suite_prompt
+    
+    return {
+        "name": "initial",
+        "role_messages": [
+            {
+                "role": "system",
+                "content": data_collector_bot_suite_prompt
+            }
+        ],
+        "task_messages": [
+            {
+                "role": "system",
+                "content": """You are now taking over from Soham. 
+The user has already heard about TheraSuite and is interested in moving forward.
+
+Start the conversation in a warm, natural way. Examples of perfect first lines:
+- “Thanks for chatting with Soham! I’m Aria, I’ll help get you set up in just a minute or two.”
+- “Hi! Soham passed me the call — I’m Aria. I just need a couple of quick details so we can get you started properly.”
+- “Hey there, Soham told me you’re interested — I’m Aria, happy to help you take the next step!”
+
+Then smoothly ask for their first name (if not known) and professional email.
+Keep everything friendly, concise, and human. Never repeat explanations about what the product does"""
             }
         ],
         "functions": [transfer_control_tool]
