@@ -69,12 +69,14 @@ transport_params = {
 }
 
 
-def transfer_control(next_node:str)->tuple[str,NodeConfig]:
+def transfer_control(args:FlowArgs,flow_manager:FlowManager)->tuple[str,NodeConfig]:
     """Transfer control to the next bot in the voice agentic meeting application
 
     Args:
         next_node (str): name of the next node (ex:data_collector,general_bot)
     """
+    
+    next_node = args['next_node']  
     
     if next_node == 'data_collector':
         return "done",create_data_collector()
