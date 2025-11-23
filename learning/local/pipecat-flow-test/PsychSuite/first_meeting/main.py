@@ -191,8 +191,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         voice_id=voice_ids["general_bot"][gender_of_bots['general_bot']],
         text_filters=[MarkdownTextFilter()],
     )
-    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-1.5-flash-8b")
-#    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-2.0-flash-lite")
+#    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-1.5-flash-8b")
+    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-2.0-flash-lite")
 
 
     context = LLMContext()
