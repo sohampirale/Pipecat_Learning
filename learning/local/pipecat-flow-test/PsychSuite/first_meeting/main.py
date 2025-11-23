@@ -178,7 +178,7 @@ def create_generalbot()->NodeConfig:
         "task_messages": [
             {
                 "role": "system",
-                "content": "Based on previous context(conversation) decide what to do ",
+                "content": "Based on previous context(conversation) decide what to do If the meeting is entirely new start by greetin with the person first having little ocnversation to make this interactive",
             }
         ],
         "functions": [transfer_control_tool]
