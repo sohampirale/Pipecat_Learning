@@ -1,8 +1,3 @@
-#
-# Copyright (c) 2024-2025, Daily
-#
-# SPDX-License-Identifier: BSD 2-Clause License
-
 """A 'Hello-World' introduction to Pipecat Flows.
 
 Requirements:
@@ -44,8 +39,27 @@ from pipecat_flows import (
 load_dotenv(override=True)
 
 voice_ids={
-    "general_bot":"6ccbfb76-1fc6-48f7-b71d-91ac6298247b",
-    "data_collector":"6a8a40f7-9284-4f1d-b839-16e205174254"
+    "general_bot":{
+        'male':"13524ffb-a918-499a-ae97-c98c7c4408c4",
+        'female':"26403c37-80c1-4a1a-8692-540551ca2ae5"
+    },
+    'personalizer_bot':{
+        'male':'5cad89c9-d88a-4832-89fb-55f2f16d13d3',
+        'female':'607167f6-9bf2-473c-accc-ac7b3b66b30b'
+    },
+    'pre_onboarding_bot':{
+        'male':'228fca29-3a0a-435c-8728-5cb483251068',
+        'female':'f9836c6e-a0bd-460e-9d3c-f7299fa60f94'
+    }
+}
+
+#"general_bot":"6ccbfb76-1fc6-48f7-b71d-91ac6298247b",
+#"data_collector":"6a8a40f7-9284-4f1d-b839-16e205174254"
+
+gender_of_bots={
+    'general_bot':'male',
+    'personlizer_bot':"female",
+    'pre_onboarding_bot':'male'
 }
 
 transport_params = {
@@ -68,31 +82,37 @@ transport_params = {
     ),
 }
 
-
 async def transfer_control(args:FlowArgs,flow_manager:FlowManager)->tuple[str,NodeConfig]:
-    """Transfer control to the next bot in the voice agentic meeting application
+    """
+    Transfer control to the next bot in the voice agentic meeting application.
 
     Args:
-        next_node (str): name of the next node (ex:data_collector,general_bot)
+        args: Dictionary containing at least 'next_node'
+        flow_manager: The flow manager instance
+
+    Returns:
+        Tuple of (status, NodeConfig or None)
     """
+    
+    #current_node=flow_manager.state['current_node']
     
     next_node = args['next_node']  
     
-  
-    #await flow_manager.push_frames(TTSSpeakFrame("Inside record_last_name_function  ,your lat name is being recorded brother"))
-    await flow_manager.task.queue_frame(TTSSpeakFrame("Inside record_last_name_function, your last name is being recorded brother"))
-
-    
-    if next_node == 'data_collector':
+    if next_node == 'personalizer_bot':
         await flow_manager.task.queue_frame(
-            TTSUpdateSettingsFrame({"voice": voice_ids['data_collector']})
+            TTSUpdateSettingsFrame({"voice": voice_ids['personlizer_bot'][gender_of_bots['personlizer_bot']]})
         )
-        return "done",create_data_collector()
+        return "done",create_personalizer_bot()
     elif next_node =='general_bot':
         await flow_manager.task.queue_frame(
-            TTSUpdateSettingsFrame({"voice": voice_ids['general_bot']})
+            TTSUpdateSettingsFrame({"voice": voice_ids['general_bot'][gender_of_bots['general_bot']]})
         )
         return "done",create_generalbot()
+    elif next_node=='pre_onboarding_bot':
+        await flow_manager.task.queue_frame(
+            TTSUpdateSettingsFrame({"voice": voice_ids['pre_onboarding_bot'][gender_of_bots['pre_onboarding_bot']]})
+        )
+        return "done",create_pre_onboarding_bot()
     else:
         return "invalid next_node name",None
 
@@ -104,6 +124,46 @@ transfer_control_tool=FlowsFunctionSchema(
     properties={'next_node':{'type':'string'}}
 )
 
+def create_pre_onboarding_bot()->NodeConfig:
+    from prompts import pre_onboarding_bot_system_prompt
+    
+    return {
+        "name": "initial",
+        "role_messages": [
+            {
+                "role": "system",
+                "content": pre_onboarding_bot_system_prompt(gender_of_bots['pre_onboarding_bot']),
+            }
+        ],
+        "task_messages": [
+            {
+                "role": "system",
+                "content": "Based on previous context(conversation) decide what to d ",
+            }
+        ],
+        "functions": [transfer_control_tool]
+    }
+
+def create_personalizer_bot()->NodeConfig:
+    from prompts import personalizer_bot_system_prompt
+    
+    return {
+        "name": "initial",
+        "role_messages": [
+            {
+                "role": "system",
+                "content": personalizer_bot_system_prompt(gender_of_bots['personlizer_bot']),
+            }
+        ],
+        "task_messages": [
+            {
+                "role": "system",
+                "content": "Based on previous context(conversation) decide what to do ",
+            }
+        ],
+        "functions": [transfer_control_tool]
+    }
+
 def create_generalbot()->NodeConfig:
     from prompts import general_bot_system_prompt
     
@@ -112,80 +172,28 @@ def create_generalbot()->NodeConfig:
         "role_messages": [
             {
                 "role": "system",
-                "content": general_bot_system_prompt('male'),
+                "content": general_bot_system_prompt(gender_of_bots['general_bot']),
             }
         ],
         "task_messages": [
             {
                 "role": "system",
-                "content": "Based on previous context(conversation) decide what to say ",
+                "content": "Based on previous context(conversation) decide what to do ",
             }
         ],
         "functions": [transfer_control_tool]
     }
-
-def create_pre_onboarding_arranger()->NodeConfig:
-    """Creates NodeConfig for the pre_onboarding_collector"""
-    from prompts.flows_prompts import pre_onboarding_arranger_bot_suite_prompt
-
-    #TODO create one prompt for this node also similar to general_bot inside prompts.flows_prompts.py    
-    
-    return {
-        "name": "initial",
-        "role_messages": [
-            {
-                "role": "system",
-                "content": pre_onboarding_arranger_bot_suite_prompt
-            }
-        ],
-        "task_messages": [
-            {
-                "role": "system",
-                "content": "Introduce yourself and tell what you are supposed to do in kindful way and in short dont bore them understand it from previous conversation",
-            }
-        ],
-        "functions": [transfer_control_tool]
-    }
-
-def create_data_collector()->NodeConfig:
-    from prompts.flows_prompts import data_collector_bot_suite_prompt
-    
-    return {
-        "name": "initial",
-        "role_messages": [
-            {
-                "role": "system",
-                "content": data_collector_bot_suite_prompt
-            }
-        ],
-        "task_messages": [
-            {
-                "role": "system",
-                "content": """You are now taking over from Soham. 
-The user has already heard about TheraSuite and is interested in moving forward.
-
-Start the conversation in a warm, natural way. Examples of perfect first lines:
-- “Thanks for chatting with Soham! I’m Aria, I’ll help get you set up in just a minute or two.”
-- “Hi! Soham passed me the call — I’m Aria. I just need a couple of quick details so we can get you started properly.”
-- “Hey there, Soham told me you’re interested — I’m Aria, happy to help you take the next step!”
-
-Then smoothly ask for their first name (if not known) and professional email.
-Keep everything friendly, concise, and human. Never repeat explanations about what the product does"""
-            }
-        ],
-        "functions": [transfer_control_tool]
-    }
-
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
-#        voice_id="6a8a40f7-9284-4f1d-b839-16e205174254",  #soham - english
-        voice_id="d01294a0-1ddd-4b92-80c9-6dbb7d40e564",    #soham - english + marathi
+        voice_id=voice_ids["general_bot"][gender_of_bots['general_bot']],
         text_filters=[MarkdownTextFilter()],
     )
-    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-2.0-flash-lite")
+    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-1.5-flash-8b")
+#    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-2.0-flash-lite")
+
 
     context = LLMContext()
     context_aggregator = LLMContextAggregatorPair(context)
@@ -204,7 +212,6 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
     task = PipelineTask(pipeline, params=PipelineParams(allow_interruptions=True))
 
-    # Initialize flow manager
     flow_manager = FlowManager(
         task=task,
         llm=llm,
@@ -226,12 +233,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     runner = PipelineRunner(handle_sigint=runner_args.handle_sigint)
     await runner.run(task)
 
-
 async def bot(runner_args: RunnerArguments):
     """Main bot entry point compatible with Pipecat Cloud."""
     transport = await create_transport(runner_args, transport_params)
     await run_bot(transport, runner_args)
-
 
 if __name__ == "__main__":
     from pipecat.runner.run import main
