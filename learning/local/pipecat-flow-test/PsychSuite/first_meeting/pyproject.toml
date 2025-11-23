@@ -1,7 +1,27 @@
 [project]
-name = "first-meeting"
+name = "pipecat-quickstart"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+description = "Quickstart example for building voice AI bots with Pipecat"
+requires-python = ">=3.10"
+dependencies = [
+    "pipecat-ai[webrtc,daily,silero,deepgram,openai,cartesia,local-smart-turn-v3,runner]",
+    "pipecat-ai-cli",
+    "pipecat-ai[google]",
+    "pipecat-ai-flows"
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.404,<2",
+    "ruff>=0.12.11,<1",
+]
+
+[tool.ruff]
+line-length = 100
+[tool.ruff.lint]
+select = ["I"]
+
+[tool.uv.workspace]
+members = [
+    "PsychSuite/first_meeting",
+]
