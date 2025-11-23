@@ -105,20 +105,20 @@ transfer_control_tool=FlowsFunctionSchema(
 )
 
 def create_generalbot()->NodeConfig:
-    from prompts.flows_prompts import general_bot_meeting_suite_prompt
+    from prompts import general_bot_system_prompt
     
     return {
         "name": "initial",
         "role_messages": [
             {
                 "role": "system",
-                "content": general_bot_meeting_suite_prompt,
+                "content": general_bot_system_prompt('male'),
             }
         ],
         "task_messages": [
             {
                 "role": "system",
-                "content": "Say Hello ans start the conversation in kindful way and in short dont bore them understand it from previous conversation, keep your responses consice when needed and descriptive when needed",
+                "content": "Based on previous context(conversation) decide what to say ",
             }
         ],
         "functions": [transfer_control_tool]
