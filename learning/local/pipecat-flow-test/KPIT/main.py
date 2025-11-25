@@ -124,8 +124,6 @@ transfer_control_tool=FlowsFunctionSchema(
     properties={'next_node':{'type':'string'}}
 )
 
-
-
 def create_node1()->NodeConfig:
     from prompts import node1_system_prompt
     
