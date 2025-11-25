@@ -28,6 +28,7 @@ from pipecat.transports.daily.transport import DailyParams
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.utils.text.markdown_text_filter import MarkdownTextFilter
 from pipecat.frames.frames import TTSSpeakFrame,TTSUpdateSettingsFrame
+from pipecat.services.deepgram import DeepgramSTTService
 
 from pipecat_flows import (
     FlowArgs,
@@ -145,7 +146,9 @@ def create_node1()->NodeConfig:
     }
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
-    stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
+    # stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
+    stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
         voice_id="13524ffb-a918-499a-ae97-c98c7c4408c4",
