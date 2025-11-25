@@ -185,7 +185,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     async def on_client_connected(transport, client):
         logger.info(f"Client connected")
         # Kick off the conversation.
-        await flow_manager.initialize(create_generalbot())
+        await flow_manager.initialize(create_node1())
 
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):
