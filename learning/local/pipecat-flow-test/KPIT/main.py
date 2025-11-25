@@ -44,18 +44,18 @@ load_dotenv()
 print('CARTESIA_API_KEY : ',os.getenv('CARTESIA_API_KEY'))
 
 # # For Hindi
-# live_options = LiveOptions(
-#     model="nova-2",
-#     language=Language.HI,  # Hindi
-# )
-
-# For Marathi
 live_options = LiveOptions(
-    model="nova-2",
-    language=Language.MR,  # Marathi
+     model="nova-2",
+     language=Language.HI,  # Hindi
 )
 
+# For Marathi
+#live_options = LiveOptions(
+#    model="nova-2",
+#    language=Language.MR,  # Marathi
+#)
 
+#voice_clone_id ="4dc749cd-6668-4316-9779-fad3159b2eb8" #suhana
 
 voice_ids={
     "general_bot":{
@@ -164,8 +164,8 @@ def create_node1()->NodeConfig:
     }
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
-    # stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
-    # stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+    #stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
+    #stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
 
     stt = DeepgramSTTService(
         api_key=os.getenv("DEEPGRAM_API_KEY"),
@@ -173,7 +173,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     )
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
-        voice_id="6ccbfb76-1fc6-48f7-b71d-91ac6298247b",
+        voice_id="fd2ada67-c2d9-4afe-b474-6386b87d8fc3",
+#        voice_id="92d0ba9f-b798-4895-8a68-12b558903b8d",
         text_filters=[MarkdownTextFilter()],
     )
 #    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-1.5-flash-8b")

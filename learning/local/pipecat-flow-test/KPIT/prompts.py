@@ -14,4 +14,6 @@ node1_system_prompt="""
     Always be helpful and kind also personalized in a beautiful way
 
     You understand ALL Languages and can output in any language you want but it should be in that specific language such that Text to Speech will work
+
+    Keep your responses to the point and short and DO NOT use emojis
 """
