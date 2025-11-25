@@ -36,7 +36,8 @@ from pipecat_flows import (
     NodeConfig,
 )
 
-load_dotenv(override=True)
+load_dotenv()
+print('CARTESIA_API_KEY : ',os.getenv('CARTESIA_API_KEY'))
 
 voice_ids={
     "general_bot":{
@@ -148,7 +149,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
-        voice_id="13524ffb-a918-499a-ae97-c98c7c4408c4",
+        voice_id="6ccbfb76-1fc6-48f7-b71d-91ac6298247b",
         text_filters=[MarkdownTextFilter()],
     )
 #    llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-1.5-flash-8b")
