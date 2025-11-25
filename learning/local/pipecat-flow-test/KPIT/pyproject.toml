@@ -1,5 +1,5 @@
 [project]
-name = "pipecat-quickstart"
+name = "KPIT-CarBuddy"
 version = "0.1.0"
 description = "Quickstart example for building voice AI bots with Pipecat"
 requires-python = ">=3.10"
@@ -21,8 +21,3 @@ line-length = 100
 [tool.ruff.lint]
 select = ["I"]
 
-[tool.uv.workspace]
-members = [
-    "PsychSuite/first_meeting",
-    "KPIT",
-]
