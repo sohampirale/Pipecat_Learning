@@ -58,7 +58,7 @@ voice_ids={
 
 gender_of_bots={
     'general_bot':'male',
-    'personlizer_bot':"female",
+    'personalizer_bot':"female",
     'pre_onboarding_bot':'male'
 }
 
@@ -100,7 +100,7 @@ async def transfer_control(args:FlowArgs,flow_manager:FlowManager)->tuple[str,No
     
     if next_node == 'personalizer_bot':
         await flow_manager.task.queue_frame(
-            TTSUpdateSettingsFrame({"voice": voice_ids['personlizer_bot'][gender_of_bots['personlizer_bot']]})
+            TTSUpdateSettingsFrame({"voice": voice_ids['personalizer_bot'][gender_of_bots['personalizer_bot']]})
         )
         return "done",create_personalizer_bot()
     elif next_node =='general_bot':
@@ -118,7 +118,7 @@ async def transfer_control(args:FlowArgs,flow_manager:FlowManager)->tuple[str,No
 
 transfer_control_tool=FlowsFunctionSchema(
     name="transfer_control",
-    description="Transfer control to the next AI Voice bot",
+    description="Transfer control to the next AI Voice bot, accept only 3 strings as next_node 1.'general_bot', 2.'personalizer_bot' 3.'pre_onboarding_bot",
     required=['next_node'],
     handler=transfer_control,
     properties={'next_node':{'type':'string'}}
@@ -152,7 +152,7 @@ def create_personalizer_bot()->NodeConfig:
         "role_messages": [
             {
                 "role": "system",
-                "content": personalizer_bot_system_prompt(gender_of_bots['personlizer_bot']),
+                "content": personalizer_bot_system_prompt(gender_of_bots['personalizer_bot']),
             }
         ],
         "task_messages": [

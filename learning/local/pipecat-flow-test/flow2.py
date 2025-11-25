@@ -189,13 +189,15 @@ def create_end_node() -> NodeConfig:
         post_actions=[{"type": "end_conversation",'text':"Thank you so much brother"}],
     )
 
+no_of_bot=1
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
 #        voice_id="6a8a40f7-9284-4f1d-b839-16e205174254",  #soham - english
-        voice_id="d01294a0-1ddd-4b92-80c9-6dbb7d40e564",    #soham - english + marathi
+        #voice_id="d01294a0-1ddd-4b92-80c9-6dbb7d40e564",    #soham - english + marathi,
+        voice_id="13524ffb-a918-499a-ae97-c98c7c4408c4",
         text_filters=[MarkdownTextFilter()],
     )
     llm = GoogleLLMService(api_key=os.getenv("GOOGLE_API_KEY"), model="gemini-2.0-flash-lite")
@@ -243,6 +245,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 async def bot(runner_args: RunnerArguments):
     """Main bot entry point compatible with Pipecat Cloud."""
     transport = await create_transport(runner_args, transport_params)
+    global no_of_bot
+    print(f'-------------no_of_bot : {no_of_bot}')
+    no_of_bot=no_of_bot+1
     await run_bot(transport, runner_args)
 
 

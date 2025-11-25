@@ -8,6 +8,12 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 
+[manifest]
+members = [
+    "pipecat-first-meeting-psychsuite",
+    "pipecat-quickstart",
+]
+
 [[package]]
 name = "aenum"
 version = "3.1.16"
@@ -2434,6 +2440,36 @@ dependencies = [
     { name = "fastapi", extra = ["all"] },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6d/c8/19e9edb707581431c74e57da386656b9f9072c7a968f5fa49005e0b53cd6/pipecat_ai_small_webrtc_prebuilt-1.0.0.tar.gz", hash = "sha256:7e3d1cba420842d469ee9ecae321a086732392acb2625d5587a54d28a16ca0ea", size = 563883, upload-time = "2025-07-25T17:57:53.266Z" }
+
+[[package]]
+name = "pipecat-first-meeting-psychsuite"
+version = "0.1.0"
+source = { virtual = "PsychSuite/first_meeting" }
+dependencies = [
+    { name = "pipecat-ai", extra = ["cartesia", "daily", "deepgram", "google", "local-smart-turn-v3", "openai", "runner", "silero", "webrtc"] },
+    { name = "pipecat-ai-cli" },
+    { name = "pipecat-ai-flows" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pyright" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pipecat-ai", extras = ["google"] },
+    { name = "pipecat-ai", extras = ["webrtc", "daily", "silero", "deepgram", "openai", "cartesia", "local-smart-turn-v3", "runner"] },
+    { name = "pipecat-ai-cli" },
+    { name = "pipecat-ai-flows" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pyright", specifier = ">=1.1.404,<2" },
+    { name = "ruff", specifier = ">=0.12.11,<1" },
+]
 
 [[package]]
 name = "pipecat-quickstart"

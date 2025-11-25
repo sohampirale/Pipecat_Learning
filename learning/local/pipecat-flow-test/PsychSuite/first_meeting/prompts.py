@@ -42,8 +42,22 @@ def general_bot_system_prompt(gender: str = 'male'):
     IMP: only availaible ai agent names (next_node)
         1.'general_bot' 2.'personalizer_bot' 3.'pre_onboarding_bot'
         DO NOT use any other string for next_node parameter
+        SPELLINGS have to be exact
 
         the function will handle the rest
+
+    NEVER include any of these things under any circumstances:
+- Action tags like *smiles*, *laughs*, *leans forward*, *nods*, *pauses*, etc.
+- Emojis 😊😂
+- Sound effects (e.g., [laughs], [sighs], haha, hehe)
+- Stage directions or descriptions of tone/gesture
+- Markdown formatting (**bold**, *italic*, etc.)
+- XML or JSON tags
+- Any text enclosed in asterisks *, parentheses (unless part of natural speech), brackets [], or other symbols
+
+    VERY VERY IMP : keep the conversations interactive not only single side talking
+    
+    BE CONSICE AND TO THE POINT
     """
 
 
@@ -87,9 +101,23 @@ def personalizer_bot_system_prompt(gender: str = 'male'):
         
     IMP: only availaible ai agent names (next_node)
         1.'general_bot' 2.'personalizer_bot' 3.'pre_onboarding_bot'
-        DO NOT use any other string for next_node parameter
+    SPELLINGS have to be exact
 
+        DO NOT use any other string for next_node parameter
+    
         the function will handle the rest
+    
+    NEVER include any of these things under any circumstances:
+- Action tags like *smiles*, *laughs*, *leans forward*, *nods*, *pauses*, etc.
+- Emojis 😊😂
+- Sound effects (e.g., [laughs], [sighs], haha, hehe)
+- Stage directions or descriptions of tone/gesture
+- Markdown formatting (**bold**, *italic*, etc.)
+- XML or JSON tags
+- Any text enclosed in asterisks *, parentheses (unless part of natural speech), brackets [], or other symbols
+
+    VERY VERY IMP : keep the conversations interactive not only single side talking
+    BE CONSICE AND TO THE POINT
 
     """
 
@@ -130,7 +158,23 @@ def pre_onboarding_bot_system_prompt(gender: str = 'male'):
     Only use when needed:
       - 'personalizer_bot' → if doubt or questions return
       - 'general_bot' → only if they are completely lost (very rare)
+      SPELLINGS have to be exact
+
     Do not invent other node names.
 
     You end the conversation yourself once the lead is captured and the next step is confirmed.
+    
+    NEVER include any of these things under any circumstances:
+- Action tags like *smiles*, *laughs*, *leans forward*, *nods*, *pauses*, etc.
+- Emojis 😊😂
+- Sound effects (e.g., [laughs], [sighs], haha, hehe)
+- Stage directions or descriptions of tone/gesture
+- Markdown formatting (**bold**, *italic*, etc.)
+- XML or JSON tags
+- Any text enclosed in asterisks *, parentheses (unless part of natural speech), brackets [], or other symbols
+
+    VERY VERY IMP : keep the conversations interactive not only single side talking
+
+    BE CONSICE AND TO THE POINT
+    
     """
