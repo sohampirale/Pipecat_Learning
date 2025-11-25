@@ -32,6 +32,15 @@ from pipecat.services.deepgram import DeepgramSTTService
 
 from deepgram import LiveOptions
 from pipecat.transcriptions.language import Language
+from pipecat.processors.filters.stt_mute_filter import STTMuteFilter, STTMuteConfig, STTMuteStrategy
+
+# Track when important message is playing
+class MessageState:
+    def __init__(self):
+        self.is_important = False
+
+state = MessageState()
+
 
 from pipecat_flows import (
     FlowArgs,
@@ -41,9 +50,24 @@ from pipecat_flows import (
 )
 
 load_dotenv()
-print('CARTESIA_API_KEY : ',os.getenv('CARTESIA_API_KEY'))
 
-# # For Hindi
+# Custom callback to decide when to mute
+async def custom_mute_logic(stt_filter: STTMuteFilter) -> bool:
+    return state.is_important  # Mute only when important
+
+stt_mute_filter = STTMuteFilter(
+    config=STTMuteConfig(
+        strategies={STTMuteStrategy.CUSTOM},
+        should_mute_callback=custom_mute_logic
+    )
+)
+
+
+
+
+
+
+#  For Hindi
 live_options = LiveOptions(
      model="nova-2",
      language=Language.HI,  # Hindi
@@ -57,23 +81,70 @@ live_options = LiveOptions(
 
 #voice_clone_id ="4dc749cd-6668-4316-9779-fad3159b2eb8" #suhana
 
-voice_ids={
-    "general_bot":{
-        'male':"13524ffb-a918-499a-ae97-c98c7c4408c4",
-        'female':"26403c37-80c1-4a1a-8692-540551ca2ae5"
-    },
-    'personalizer_bot':{
-        'male':'5cad89c9-d88a-4832-89fb-55f2f16d13d3',
-        'female':'607167f6-9bf2-473c-accc-ac7b3b66b30b'
-    },
-    'pre_onboarding_bot':{
-        'male':'228fca29-3a0a-435c-8728-5cb483251068',
-        'female':'f9836c6e-a0bd-460e-9d3c-f7299fa60f94'
-    }
-}
+async def send_email(args:FlowArgs,flow_manager:FlowManager):
+    """Sends email to requested user
 
-#"general_bot":"6ccbfb76-1fc6-48f7-b71d-91ac6298247b",
-#"data_collector":"6a8a40f7-9284-4f1d-b839-16e205174254"
+    args={
+        'user_request':'clear explaination of the users request regarding sending email'
+    }
+
+    """
+    state.is_important=True
+    await flow_manager.task.queue_frame( 
+      TTSSpeakFrame("Email sent to the requested user")
+    )
+
+async def send_telegram_message(args:FlowArgs,flow_manager:FlowManager):
+    """Sends telegram message to requested user
+
+    args={
+        'user_request':'clear explaination of the users request regarding sending telegram message'
+    }
+
+    """
+    state.is_important=True
+    await flow_manager.task.queue_frame( 
+      TTSSpeakFrame("Message sent to the requested user over telegram")
+    )
+
+async def send_telegram_voice(args:FlowArgs,flow_manager:FlowManager):
+    """Sends voice over telegram to requested user
+
+    args={
+        'user_request':'clear explaination of the users request regarding sending voice over telegram'
+    }
+
+    """
+    state.is_important=True
+    await flow_manager.task.queue_frame( 
+      TTSSpeakFrame("Voice sent to the requested user over telegram")
+    )
+
+send_email_tool=FlowsFunctionSchema(
+    name="send_email_tool",
+    description="Sends email to requested user",
+    required=['user_request'],
+    handler=send_email,
+    properties={'user_request':{'type':'string'}}
+)
+
+send_telegram_message_tool=FlowsFunctionSchema(
+    name="send_telegram_message_tool",
+    description="Sends Telegram message to requested user",
+    required=['user_request'],
+    handler=send_telegram_message,
+    properties={'user_request':{'type':'string'}}
+)
+
+
+send_telegram_voice_message_tool=FlowsFunctionSchema(
+    name="send_telegram_voice_message_tool",
+    description="Sends Voice over Telegram to requested user",
+    required=['user_request'],
+    handler=send_telegram_voice,
+    properties={'user_request':{'type':'string'}}
+)
+
 
 gender_of_bots={
     'general_bot':'male',
@@ -160,7 +231,7 @@ def create_node1()->NodeConfig:
                 "content": "Start the conversation by saying hello to the user",
             }
         ],
-        "functions": []
+        "functions": [send_email_tool,send_telegram_message_tool,send_telegram_voice_message_tool]
     }
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
@@ -188,6 +259,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         [
             transport.input(),  # Transport user input
             stt,  # STT
+            stt_mute_filter,
             context_aggregator.user(),  # User responses
             llm,  # LLM
             tts,  # TTS
@@ -215,6 +287,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     async def on_client_disconnected(transport, client):
         logger.info(f"Client disconnected")
         await task.cancel()
+
+    @transport.event_handler("on_bot_stopped_speaking")
+    async def on_bot_stopped(transport):
+        state.is_important = False
 
     runner = PipelineRunner(handle_sigint=runner_args.handle_sigint)
     await runner.run(task)
