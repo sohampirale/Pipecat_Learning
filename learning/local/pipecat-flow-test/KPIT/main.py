@@ -28,6 +28,10 @@ from pipecat.transports.daily.transport import DailyParams
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.utils.text.markdown_text_filter import MarkdownTextFilter
 from pipecat.frames.frames import TTSSpeakFrame,TTSUpdateSettingsFrame
+from pipecat.services.deepgram import DeepgramSTTService
+
+from deepgram import LiveOptions
+from pipecat.transcriptions.language import Language
 
 from pipecat_flows import (
     FlowArgs,
@@ -38,6 +42,20 @@ from pipecat_flows import (
 
 load_dotenv()
 print('CARTESIA_API_KEY : ',os.getenv('CARTESIA_API_KEY'))
+
+# # For Hindi
+# live_options = LiveOptions(
+#     model="nova-2",
+#     language=Language.HI,  # Hindi
+# )
+
+# For Marathi
+live_options = LiveOptions(
+    model="nova-2",
+    language=Language.MR,  # Marathi
+)
+
+
 
 voice_ids={
     "general_bot":{
@@ -146,7 +164,13 @@ def create_node1()->NodeConfig:
     }
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
-    stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
+    # stt = CartesiaSTTService(api_key=os.getenv("CARTESIA_API_KEY"))
+    # stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
+
+    stt = DeepgramSTTService(
+        api_key=os.getenv("DEEPGRAM_API_KEY"),
+        live_options=live_options,
+    )
     tts = CartesiaTTSService(
         api_key=os.getenv("CARTESIA_API_KEY"),
         voice_id="6ccbfb76-1fc6-48f7-b71d-91ac6298247b",
