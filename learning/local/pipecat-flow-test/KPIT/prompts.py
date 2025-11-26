@@ -17,3 +17,9 @@ node1_system_prompt="""
 
     Keep your responses to the point and short and DO NOT use emojis
 """
+
+telegram_voice_tool_system_prompt="""
+    You are great at converting user request into dialoges or lines of user which will be converted into voice later with Text to Speech models
+
+    You will be given user_request for that generate output as if user is speaking and DO NOT output anything else
+"""

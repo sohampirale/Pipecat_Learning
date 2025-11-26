@@ -34,6 +34,16 @@ from deepgram import LiveOptions
 from pipecat.transcriptions.language import Language
 from pipecat.processors.filters.stt_mute_filter import STTMuteFilter, STTMuteConfig, STTMuteStrategy
 
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import BaseMessage, ToolMessage, SystemMessage,HumanMessage,AIMessage
+
+llm_temp  = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash",
+    temperature=0.6,
+    api_key=os.getenv('GEMINI_API_KEY')
+)
+
+
 # Track when important message is playing
 class MessageState:
     def __init__(self):
@@ -81,7 +91,7 @@ live_options = LiveOptions(
 
 #voice_clone_id ="4dc749cd-6668-4316-9779-fad3159b2eb8" #suhana
 
-async def send_email(args:FlowArgs,flow_manager:FlowManager):
+async def send_email(args:FlowArgs,flow_manager:FlowManager)->tu:
     """Sends email to requested user
 
     args={
@@ -93,6 +103,8 @@ async def send_email(args:FlowArgs,flow_manager:FlowManager):
     await flow_manager.task.queue_frame( 
       TTSSpeakFrame("Email sent to the requested user")
     )
+
+    return "email sent successfully",None
 
 async def send_telegram_message(args:FlowArgs,flow_manager:FlowManager):
     """Sends telegram message to requested user
@@ -115,6 +127,13 @@ async def send_telegram_voice(args:FlowArgs,flow_manager:FlowManager):
     }
 
     """
+    from prompts import telegram_voice_tool_system_prompt
+    system_prompt = SystemMessage(content=telegram_voice_tool_system_prompt)
+
+    response = llm_temp.invoke([system_prompt]+HumanMessage(content=f"user_request is : {args['user_request']}"))
+
+    print(f'Response form llm : {response}')
+
     state.is_important=True
     await flow_manager.task.queue_frame( 
       TTSSpeakFrame("Voice sent to the requested user over telegram")
