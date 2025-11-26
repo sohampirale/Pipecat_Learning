@@ -9,7 +9,7 @@ uv run hello_world.py
 """
 
 import os
-
+import aiohttp
 from dotenv import load_dotenv
 from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -29,7 +29,7 @@ from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.utils.text.markdown_text_filter import MarkdownTextFilter
 from pipecat.frames.frames import TTSSpeakFrame,TTSUpdateSettingsFrame
 from pipecat.services.deepgram import DeepgramSTTService
-
+from cartesia import Cartesia
 from deepgram import LiveOptions
 from pipecat.transcriptions.language import Language
 from pipecat.processors.filters.stt_mute_filter import STTMuteFilter, STTMuteConfig, STTMuteStrategy
@@ -37,12 +37,16 @@ from pipecat.processors.filters.stt_mute_filter import STTMuteFilter, STTMuteCon
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import BaseMessage, ToolMessage, SystemMessage,HumanMessage,AIMessage
 
+load_dotenv()
+
 llm_temp  = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash",
     temperature=0.6,
     api_key=os.getenv('GEMINI_API_KEY')
 )
 
+
+cartesia_client=Cartesia(api_key=os.getenv('CARTESIA_API_KEY'))
 
 # Track when important message is playing
 class MessageState:
@@ -59,7 +63,6 @@ from pipecat_flows import (
     NodeConfig,
 )
 
-load_dotenv()
 
 # Custom callback to decide when to mute
 async def custom_mute_logic(stt_filter: STTMuteFilter) -> bool:
@@ -91,7 +94,7 @@ live_options = LiveOptions(
 
 #voice_clone_id ="4dc749cd-6668-4316-9779-fad3159b2eb8" #suhana
 
-async def send_email(args:FlowArgs,flow_manager:FlowManager)->tu:
+async def send_email(args:FlowArgs,flow_manager:FlowManager)->tuple[str,NodeConfig]:
     """Sends email to requested user
 
     args={
@@ -114,10 +117,10 @@ async def send_telegram_message(args:FlowArgs,flow_manager:FlowManager):
     }
 
     """
-    state.is_important=True
-    await flow_manager.task.queue_frame( 
-      TTSSpeakFrame("Message sent to the requested user over telegram")
-    )
+    #state.is_important=True
+    #await flow_manager.task.queue_frame( 
+    #  TTSSpeakFrame("Message sent to the requested user over telegram")
+    #)
 
 async def send_telegram_voice(args:FlowArgs,flow_manager:FlowManager):
     """Sends voice over telegram to requested user
@@ -130,14 +133,45 @@ async def send_telegram_voice(args:FlowArgs,flow_manager:FlowManager):
     from prompts import telegram_voice_tool_system_prompt
     system_prompt = SystemMessage(content=telegram_voice_tool_system_prompt)
 
-    response = llm_temp.invoke([system_prompt]+HumanMessage(content=f"user_request is : {args['user_request']}"))
+    response = llm_temp.invoke([system_prompt,HumanMessage(content=f"user_request is : {args['user_request']}")])
 
     print(f'Response form llm : {response}')
 
-    state.is_important=True
+    audio_data = bytearray()
+    audio_itr = cartesia_client.tts.bytes(
+        model_id="sonic-3",
+        transcript=response.content,  # Fixed: use response.content
+        voice={"mode": "id", "id": "d80254ad-227a-428e-a5c5-2f3dcd12206b"},
+        output_format={"container": "wav", "encoding": "pcm_s16le", "sample_rate": 44100},
+        generation_config={"speed": 1.0}  # Range: 0.6 to 1.5
+
+    )  # Returns complete audio
+    
+   # with open("voice.wav", "wb") as f:
+    #    for chunk in audio_itr:
+     #       f.write(chunk)
+
+    for chunk in audio_itr:
+        audio_data.extend(chunk)
+
+    # Send to Telegram endpoint
+    async with aiohttp.ClientSession() as session:
+        try:
+            form = aiohttp.FormData()
+            form.add_field('audio', bytes(audio_data), filename='voice.wav', content_type='audio/wav')
+    
+            async with session.post('https://vaishnavi196.app.n8n.cloud/webhook-test/b590e6cb-eb54-454f-8ea0-7cd3a6e3f264', data=form) as resp:
+                result = await resp.json()
+                print(f'result from n8n : {result}')
+        except Exception as e:
+            print('ERROR sending generated audio over telegram : ',e)
+
+   #state.is_important=True
     await flow_manager.task.queue_frame( 
-      TTSSpeakFrame("Voice sent to the requested user over telegram")
+         TTSSpeakFrame("Voice sent to the requested user over telegram")
     )
+
+    return "voice sent successfully over telegram",None
 
 send_email_tool=FlowsFunctionSchema(
     name="send_email_tool",

@@ -7,7 +7,9 @@ dependencies = [
     "pipecat-ai[webrtc,daily,silero,deepgram,openai,cartesia,local-smart-turn-v3,runner]",
     "pipecat-ai-cli",
     "pipecat-ai[google]",
-    "pipecat-ai-flows"
+    "pipecat-ai-flows",
+    "langchain_google_genai",
+    "cartesia"
 ]
 
 [dependency-groups]
